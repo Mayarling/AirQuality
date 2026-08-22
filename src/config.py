@@ -22,6 +22,8 @@ REPORTS_DIR = BASE_DIR / "reports"
 
 RAW_FILE = RAW_DIR / "AirQualityUCI.csv"
 INTERIM_FILE = INTERIM_DIR / "air_quality_interim.parquet"
+PROCESSED_FILE = PROCESSED_DIR / "air_quality_limpio.parquet"
+REPORTE_CALIDAD = REPORTS_DIR / "diagnostico_calidad.md"
 
 # --------------------------------------------------------------------------
 # Fuente de los datos
@@ -63,6 +65,25 @@ EXPECTED_COLUMNS = [
 # Columnas numericas (todas menos Date y Time)
 NUMERIC_COLUMNS = EXPECTED_COLUMNS[2:]
 
+# El arreglo de sensores de estado solido y las variables ambientales que lo
+# acompañan. Todas estas se apagan juntas cuando el equipo deja de medir.
+# C6H6(GT) va en este grupo porque su valor se deriva de PT08.S2(NMHC).
+SENSOR_COLUMNS = [
+    "PT08.S1(CO)",
+    "PT08.S2(NMHC)",
+    "PT08.S3(NOx)",
+    "PT08.S4(NO2)",
+    "PT08.S5(O3)",
+    "C6H6(GT)",
+    "T",
+    "RH",
+    "AH",
+]
+
+# Mediciones del analizador certificado de referencia. Es un instrumento
+# distinto del arreglo de sensores, por eso falla en otros momentos.
+REFERENCE_COLUMNS = ["CO(GT)", "NMHC(GT)", "NOx(GT)", "NO2(GT)"]
+
 # Codigo con el que UCI marca los datos faltantes
 MISSING_CODE = -200
 
@@ -83,6 +104,15 @@ FORECAST_HORIZON = 24
 # Columna que descartamos: 90.23% de sus valores son -200, rellenarla seria
 # inventar datos.
 COLUMNS_TO_DROP = ["NMHC(GT)"]
+
+# Los faltantes no estan sueltos: son 16 apagones del equipo, el mas largo de
+# 76 horas seguidas. Solo rellenamos los huecos cortos; un hueco de tres dias
+# no se inventa.
+MAX_GAP_INTERPOLAR = 3  # horas
+
+# El benceno tiene sesgo 1.362 (cola larga de picos). Con logaritmo baja a
+# -0.233. Modelamos en log y devolvemos las metricas en la escala original.
+USAR_LOG_TARGET = True
 
 RANDOM_SEED = 42
 
