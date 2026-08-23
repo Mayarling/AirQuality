@@ -182,3 +182,40 @@ VALID_RANGES = {
 # --------------------------------------------------------------------------
 PSI_WARNING = 0.10
 PSI_ALERT = 0.25
+
+# --------------------------------------------------------------------------
+# MLflow
+# --------------------------------------------------------------------------
+# Guardamos todo en la carpeta mlruns del proyecto. No se sube a Git: se
+# regenera corriendo el entrenamiento.
+MLFLOW_TRACKING_URI = f"file:///{(BASE_DIR / 'mlruns').as_posix()}"
+MLFLOW_EXPERIMENT = "air-quality-benceno-24h"
+
+# Nombre con el que queda el modelo en el Model Registry
+MODELO_REGISTRADO = "grupo8-benceno-24h"
+
+# Alias que representan el ciclo del enunciado:
+#   Experiment -> Candidate -> Validation -> Production
+# En MLflow los stages quedaron obsoletos; los alias hacen lo mismo y se ven
+# igual de claro en la interfaz.
+ALIAS_CANDIDATO = "candidato"
+ALIAS_PRODUCCION = "produccion"
+
+# --------------------------------------------------------------------------
+# Criterios explicitos para escoger el modelo (seccion J)
+# --------------------------------------------------------------------------
+# No se escoge "el que dio mejor". Un modelo tiene que cumplir las tres
+# condiciones para siquiera ser candidato, y entre los que cumplen gana el de
+# menor MAE en validacion.
+#
+# 1. Ganarle al baseline por un margen que valga la pena. Si un modelo
+#    complicado apenas empata con repetir el valor de ayer, no compensa
+#    mantenerlo en produccion.
+MEJORA_MINIMA_VS_BASELINE = 0.10   # 10% menos de MAE
+
+# 2. No estar sobreajustado. Si el error en validacion es mucho peor que en
+#    entrenamiento, el modelo se aprendio el ruido.
+MAX_DEGRADACION_TRAIN_VALID = 0.60  # el MAE de validacion no puede ser 60% peor
+
+# 3. Un techo de error absoluto, para que el pronostico sirva de algo.
+MAE_MAXIMO_ACEPTABLE = 5.0          # ug/m3
