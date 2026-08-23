@@ -150,7 +150,11 @@ def construir_features(df, horizonte=None, con_objetivo=True):
     salida["dia_seno"] = seno_dia
     salida["dia_coseno"] = coseno_dia
 
-    salida["es_fin_de_semana"] = (objetivo_en.dayofweek >= 5).astype(int)
+    # Va como decimal y no como entero a proposito: MLflow guarda el tipo de
+    # cada columna y despues lo exige en la API. Un entero no admite nulos, asi
+    # que si alguna vez llega un dato incompleto el servicio falla con un error
+    # raro de esquema. Con decimal eso no pasa.
+    salida["es_fin_de_semana"] = (objetivo_en.dayofweek >= 5).astype("float64")
 
     # --- El objetivo ----------------------------------------------------
     if con_objetivo:
