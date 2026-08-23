@@ -23,6 +23,7 @@ REPORTS_DIR = BASE_DIR / "reports"
 RAW_FILE = RAW_DIR / "AirQualityUCI.csv"
 INTERIM_FILE = INTERIM_DIR / "air_quality_interim.parquet"
 PROCESSED_FILE = PROCESSED_DIR / "air_quality_limpio.parquet"
+FEATURES_FILE = PROCESSED_DIR / "features.parquet"
 REPORTE_CALIDAD = REPORTS_DIR / "diagnostico_calidad.md"
 
 # --------------------------------------------------------------------------
@@ -115,6 +116,28 @@ MAX_GAP_INTERPOLAR = 3  # horas
 USAR_LOG_TARGET = True
 
 RANDOM_SEED = 42
+
+# --------------------------------------------------------------------------
+# Variables del modelo (salieron del analisis exploratorio)
+# --------------------------------------------------------------------------
+# Los rezagos estan medidos DESDE LA HORA QUE QUEREMOS PREDECIR, no desde
+# ahora. Por eso ninguno puede ser menor que FORECAST_HORIZON: a la hora t no
+# conocemos nada de lo que pasa entre t+1 y t+23.
+#
+# El 24 y el 168 los escogio la autocorrelacion (0.656 y 0.592). El 25 y el 48
+# acompañan para darle contexto al modelo.
+LAGS_TARGET = [24, 25, 48, 168]
+
+# Ventanas de media movil, en horas, calculadas hasta el momento de predecir.
+VENTANAS_MOVILES = [3, 24]
+
+# Sensores que entran como variable, siempre rezagados. PT08.S2 es el que
+# correlaciona 0.982 con el benceno: justamente por eso solo puede entrar
+# rezagado y nunca del mismo instante que queremos predecir.
+SENSORES_FEATURE = ["PT08.S1(CO)", "PT08.S2(NMHC)", "PT08.S5(O3)"]
+
+# Variables ambientales que tambien entran rezagadas.
+AMBIENTALES_FEATURE = ["T", "RH", "AH"]
 
 # --------------------------------------------------------------------------
 # Cortes temporales
