@@ -111,8 +111,9 @@ COLUMNS_TO_DROP = ["NMHC(GT)"]
 # no se inventa.
 MAX_GAP_INTERPOLAR = 3  # horas
 
-# El benceno tiene sesgo 1.362 (cola larga de picos). Con logaritmo baja a
-# -0.233. Modelamos en log y devolvemos las metricas en la escala original.
+# El benceno tiene sesgo 1.362 en los datos crudos y 1.361 despues de la
+# limpieza (cola larga de picos). Con logaritmo baja a -0.234. Modelamos en
+# log y devolvemos las metricas en la escala original.
 USAR_LOG_TARGET = True
 
 RANDOM_SEED = 42

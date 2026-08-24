@@ -30,8 +30,8 @@ WORKDIR /app
 # instalar las librerias. Al reves tardaria varios minutos en cada cambio.
 #
 # Se instala requirements-api.txt y no requirements.txt: la API no necesita
-# MLflow, matplotlib ni statsmodels, y sacarlos baja el tamano a menos de la
-# mitad.
+# MLflow, matplotlib ni statsmodels. Medido: la imagen pasa de 1.33 GB a
+# 865 MB, cerca de un 35% menos.
 COPY requirements-api.txt .
 RUN pip install --no-cache-dir -r requirements-api.txt
 
