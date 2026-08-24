@@ -49,16 +49,16 @@ distintos, asi que hay que mirarlos por separado:
 - Arreglo de sensores (PT08.S1(CO), PT08.S2(NMHC), PT08.S3(NOx), PT08.S4(NO2), PT08.S5(O3), C6H6(GT), T, RH, AH)
 - Analizador de referencia (CO(GT), NMHC(GT), NOx(GT), NO2(GT))
 
-Filas donde el arreglo de sensores no midio absolutamente nada: 366
+Filas donde el arreglo de sensores no midió absolutamente nada: 366
 Filas donde al menos uno de ellos esta nulo: 366
 
-Los dos numeros coinciden, lo que confirma que se apagan juntos: no son
+Los dos números coinciden, lo que confirma que se apagan juntos: no son
 fallas sueltas de un sensor, es el equipo completo fuera de servicio.
 
 - Cantidad de bloques seguidos: 16
-- Duracion de cada bloque en horas: [76, 75, 52, 45, 38, 24, 14, 10, 9, 8, 5, 4, 3, 1, 1, 1]
+- Duración de cada bloque en horas: [76, 75, 52, 45, 38, 24, 14, 10, 9, 8, 5, 4, 3, 1, 1, 1]
 
-## 5. Estadistica descriptiva, sesgo y cardinalidad
+## 5. Estadística descriptiva, sesgo y cardinalidad
 
 | columna | min | p50 | max | media | desv | skew | unicos |
 |---|---|---|---|---|---|---|---|
@@ -80,12 +80,12 @@ fallas sueltas de un sensor, es el equipo completo fuera de servicio.
 
 Rangos evaluados: {'T': (-20.0, 55.0), 'RH': (0.0, 100.0), 'AH': (0.0, 3.0), 'CO(GT)': (0.0, 100.0), 'C6H6(GT)': (0.0, 100.0), 'NOx(GT)': (0.0, 2000.0), 'NO2(GT)': (0.0, 1000.0)}
 
-Resultado: ningun valor fuera de rango fisico
+Resultado: ningún valor fuera de rango físico
 
 ## 7. Valores extremos
 
 Criterio: fuera de Q1 - 3*RIC o Q3 + 3*RIC. Se cuentan, no se borran:
-en contaminacion del aire un pico alto suele ser un evento real.
+en contaminación del aire un pico alto suele ser un evento real.
 
 | columna | extremos | pct |
 |---|---|---|
@@ -103,7 +103,7 @@ en contaminacion del aire un pico alto suele ser un evento real.
 | RH | 0 | 0.0 |
 | AH | 0 | 0.0 |
 
-## 8. Correlacion con el target y riesgo de leakage
+## 8. Correlación con el target y riesgo de leakage
 
 | columna | correlacion_con_target | filas_comparables |
 |---|---|---|
@@ -120,9 +120,9 @@ en contaminacion del aire un pico alto suele ser un evento real.
 | AH | 0.168 | 8991 |
 | RH | -0.0617 | 8991 |
 
-Columnas con correlacion mayor a 0.95: ['PT08.S2(NMHC)']
+Columnas con correlación mayor a 0.95: ['PT08.S2(NMHC)']
 
-Este numero no es una curiosidad estadistica, es una advertencia. En este
+Este numero no es una curiosidad estadística, es una advertencia. En este
 dataset el valor de benceno se obtuvo calibrando la respuesta del sensor
 PT08.S2(NMHC), asi que las dos columnas miden casi lo mismo.
 
