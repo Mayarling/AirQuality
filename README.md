@@ -635,9 +635,20 @@ Vale la pena mirar el caso de `ridge`: se degrada solo **8.2%** de entrenamiento
 
 La importancia se mide **por permutación**: se revuelve una columna al azar y se mira cuánto empeora el error. Es más lento que mirar la estructura interna del modelo, pero mide lo que el modelo de verdad usa.
 
-`benceno_lag168` —el benceno de hace una semana a la misma hora— es la variable más importante con diferencia: pesa **más de seis veces** lo que pesa `benceno_lag24`. El patrón semanal manda sobre el diario, y tiene sentido, porque el tráfico se repite por día de la semana.
+| Variable | Importancia |
+|---|---|
+| `benceno_lag168` | 0.11016 |
+| `hora_coseno` | 0.03508 |
+| `PT08.S2(NMHC)_lag24` | 0.02701 |
+| `dia_seno` | 0.02469 |
+| `benceno_lag24` | 0.02035 |
+| `hora_seno` | 0.01327 |
+| `T_lag24` | 0.00632 |
+| `benceno_media24h` | 0.00568 |
 
-Detrás vienen `hora_coseno` y `PT08.S2(NMHC)_lag24`. Que una variable de calendario quede segunda dice mucho: buena parte de lo que hay que saber del benceno de mañana está en la hora del día.
+`benceno_lag168` —el benceno de hace una semana a la misma hora— es la variable más importante con diferencia: pesa **5.4 veces** lo que pesa `benceno_lag24`. El patrón semanal manda sobre el diario, y tiene sentido, porque el tráfico se repite por día de la semana.
+
+Detrás vienen `hora_coseno` y `PT08.S2(NMHC)_lag24`. Que dos de las cuatro primeras sean variables de calendario dice mucho: buena parte de lo que hay que saber del benceno de mañana está en qué hora y qué día va a ser.
 
 ### El monitoreo sobre los tres lotes
 
