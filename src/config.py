@@ -201,6 +201,15 @@ MODELO_REGISTRADO = "grupo8-benceno-24h"
 ALIAS_CANDIDATO = "candidato"
 ALIAS_PRODUCCION = "produccion"
 
+# Carpeta donde se exporta el modelo de produccion como archivos sueltos.
+#
+# Hace falta porque MLflow guarda dentro de mlruns las rutas absolutas de la
+# maquina donde se entreno (C:\Users\...). Dentro de Docker esas rutas no
+# existen y el modelo no carga. Exportarlo aparte deja una copia que funciona
+# en cualquier lado.
+MODELO_EXPORTADO_DIR = BASE_DIR / "models" / "produccion"
+MODELO_EXPORTADO_META = BASE_DIR / "models" / "produccion_info.json"
+
 # --------------------------------------------------------------------------
 # Criterios explicitos para escoger el modelo (seccion J)
 # --------------------------------------------------------------------------
