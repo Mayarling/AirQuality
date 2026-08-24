@@ -1,0 +1,111 @@
+{
+  "modelo": {
+    "nombre": "grupo8-benceno-24h",
+    "version": "2",
+    "algoritmo": "gradient_boosting"
+  },
+  "umbrales": {
+    "psi_warning": 0.1,
+    "psi_alert": 0.25,
+    "degradacion_maxima": 0.25
+  },
+  "lotes": {
+    "batch1": {
+      "drift": {
+        "estado": "ALERT",
+        "psi_maximo": 1.6712,
+        "variable_mas_cambiada": "T_lag24",
+        "variables_en_alerta": [
+          "T_lag24",
+          "RH_lag24",
+          "benceno_media24h",
+          "AH_lag24",
+          "PT08.S5(O3)_lag24"
+        ],
+        "variables_en_aviso": [
+          "PT08.S1(CO)_lag24",
+          "benceno_media3h",
+          "PT08.S2(NMHC)_lag24",
+          "benceno_lag24",
+          "benceno_lag25",
+          "benceno_lag48",
+          "benceno_lag168"
+        ],
+        "total_variables": 18
+      }
+    },
+    "batch2": {
+      "drift": {
+        "estado": "ALERT",
+        "psi_maximo": 6.1748,
+        "variable_mas_cambiada": "T_lag24",
+        "variables_en_alerta": [
+          "T_lag24",
+          "AH_lag24",
+          "RH_lag24",
+          "benceno_media24h"
+        ],
+        "variables_en_aviso": [
+          "PT08.S5(O3)_lag24",
+          "benceno_tendencia",
+          "benceno_media3h"
+        ],
+        "total_variables": 18
+      }
+    },
+    "batch3": {
+      "drift": {
+        "estado": "ALERT",
+        "psi_maximo": 3.2653,
+        "variable_mas_cambiada": "T_lag24",
+        "variables_en_alerta": [
+          "T_lag24",
+          "AH_lag24",
+          "benceno_media24h",
+          "RH_lag24"
+        ],
+        "variables_en_aviso": [
+          "benceno_lag168",
+          "benceno_media3h",
+          "benceno_lag25",
+          "benceno_lag24",
+          "PT08.S2(NMHC)_lag24",
+          "benceno_lag48"
+        ],
+        "total_variables": 18
+      }
+    }
+  },
+  "decisiones": [
+    {
+      "decision": "REENTRENAR",
+      "motivo": "los datos cambiaron (PSI 1.671 por encima de 0.25) Y el modelo se degrado (+88.8%, limite 25%)",
+      "hay_drift": true,
+      "hay_degradacion": true,
+      "psi_maximo": 1.6712,
+      "degradacion": 0.8883,
+      "lote": "batch1",
+      "mae": 5.485
+    },
+    {
+      "decision": "REENTRENAR",
+      "motivo": "los datos cambiaron (PSI 6.175 por encima de 0.25) Y el modelo se degrado (+51.1%, limite 25%)",
+      "hay_drift": true,
+      "hay_degradacion": true,
+      "psi_maximo": 6.1748,
+      "degradacion": 0.511,
+      "lote": "batch2",
+      "mae": 4.389
+    },
+    {
+      "decision": "VIGILAR",
+      "motivo": "los datos cambiaron (PSI 3.265) pero el modelo sigue respondiendo bien (-3.4%). Reentrenar aqui seria botar un modelo que funciona",
+      "hay_drift": true,
+      "hay_degradacion": false,
+      "psi_maximo": 3.2653,
+      "degradacion": -0.0343,
+      "lote": "batch3",
+      "mae": 2.805
+    }
+  ]
+}
