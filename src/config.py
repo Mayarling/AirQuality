@@ -183,6 +183,30 @@ VALID_RANGES = {
 PSI_WARNING = 0.10
 PSI_ALERT = 0.25
 
+# Cantidad de tramos en que se parte la variable para calcular el PSI. Diez es
+# lo habitual: con menos se pierde detalle y con muchos mas, tramos casi vacios
+# hacen que el numero salte por ruido.
+PSI_BINS = 10
+
+# Umbral del test de Kolmogorov-Smirnov. Con miles de filas casi cualquier
+# diferencia sale significativa, asi que el p-valor por si solo no alcanza:
+# se reporta junto al PSI y nunca se decide con el solo.
+KS_ALPHA = 0.05
+
+# --------------------------------------------------------------------------
+# Cuando reentrenar (seccion Q)
+# --------------------------------------------------------------------------
+# El disparador exige las DOS condiciones a la vez, no una sola:
+#   1. que los datos hayan cambiado, y
+#   2. que el modelo se haya dañado de verdad
+#
+# La razon esta medida con nuestros propios datos: el lote 3 tiene un PSI de
+# 3.265 en temperatura (cambio enorme) y sin embargo el modelo anda mejor que
+# en validacion. Reentrenar solo porque cambio una distribucion habria sido
+# tirar a la basura un modelo que estaba funcionando bien.
+DEGRADACION_MAXIMA = 0.25   # el MAE no puede empeorar mas de 25%
+MIN_FILAS_PARA_DECIDIR = 200  # con menos datos, cualquier metrica es ruido
+
 # --------------------------------------------------------------------------
 # MLflow
 # --------------------------------------------------------------------------

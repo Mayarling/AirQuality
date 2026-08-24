@@ -8,7 +8,7 @@ sigue.
 La diferencia entre dura y blanda es una decision nuestra, no un tecnicismo:
 una regla dura marca algo que hace inutil el resultado (falta una columna, el
 target esta vacio). Una blanda marca algo que hay que mirar pero que no impide
-seguir (aparecieron más huecos de lo normal).
+seguir (aparecieron mas huecos de lo normal).
 
 Se ejecuta asi:
 
@@ -58,11 +58,11 @@ class Resultado:
 
 def _esquema(df, esperadas):
     """
-    Comprueba que esten las columnas esperadas, que sean númericas y que no
-    haya aparecido ninguna de más.
+    Comprueba que esten las columnas esperadas, que sean numericas y que no
+    haya aparecido ninguna de mas.
 
-    Una columna nueva que nadie pidio es un cambio de esquema, y en producción
-    eso rompe el modelo en silencio. Por eso también falla la regla.
+    Una columna nueva que nadie pidio es un cambio de esquema, y en produccion
+    eso rompe el modelo en silencio. Por eso tambien falla la regla.
     """
     auxiliares = ("datetime", "imputado")
 
@@ -75,9 +75,9 @@ def _esquema(df, esperadas):
     if faltan:
         problemas.append(f"faltan {faltan}")
     if no_numericas:
-        problemas.append(f"no son númericas {no_numericas}")
+        problemas.append(f"no son numericas {no_numericas}")
     if nuevas:
-        problemas.append(f"columnas de más {nuevas}")
+        problemas.append(f"columnas de mas {nuevas}")
 
     paso = not problemas
     detalle = "; ".join(problemas) if problemas else f"{len(esperadas)} columnas correctas"
@@ -87,7 +87,7 @@ def _esquema(df, esperadas):
 
 
 def r01_esquema_entrada(df):
-    """En la capa interim todavia están todas las columnas del archivo original."""
+    """En la capa interim todavia estan todas las columnas del archivo original."""
     esperadas = [c for c in config.EXPECTED_COLUMNS if c not in ("Date", "Time")]
     return _esquema(df, esperadas)
 
@@ -99,13 +99,21 @@ def r01_esquema_salida(df):
     return _esquema(df, esperadas)
 
 
-def r02_filas_minimas(df):
-    """Llegaron suficientes filas como para que el resultado signifique algo."""
+def r02_filas_minimas(df, minimo=None):
+    """
+    Llegaron suficientes filas como para que el resultado signifique algo.
+
+    El minimo cambia segun lo que se este revisando. El historico completo tiene
+    que traer miles de filas; un lote de produccion de dos meses, muchas menos.
+    Usar el mismo numero para los dos haria que todo lote diera error sin que
+    haya nada malo.
+    """
+    minimo = minimo if minimo is not None else config.MIN_ROWS
     n = len(df)
-    paso = n >= config.MIN_ROWS
+    paso = n >= minimo
     return Resultado("R02", "cantidad minima de filas", DURA, paso,
-                     f"{n} filas (minimo {config.MIN_ROWS})",
-                     {"filas": n, "minimo": config.MIN_ROWS})
+                     f"{n} filas (minimo {minimo})",
+                     {"filas": n, "minimo": minimo})
 
 
 def r03_sin_timestamps_repetidos(df):
@@ -125,33 +133,65 @@ def r04_continuidad_horaria(df):
     """
     fechas = df["datetime"].sort_values()
     completo = pd.date_range(fechas.min(), fechas.max(), freq="h")
-    faltantes = len(completo) - len(fechas)
-    paso = faltantes == 0
-    return Resultado("R04", "continuidad horaria", BLANDA, paso,
-                     f"{faltantes} horas ausentes de {len(completo)} esperadas",
-                     {"horas_ausentes": faltantes, "horas_esperadas": len(completo)})
+    diferencia = len(completo) - len(fechas)
+    paso = diferencia == 0
+
+    if diferencia > 0:
+        detalle = f"{diferencia} horas ausentes de {len(completo)} esperadas"
+    elif diferencia < 0:
+        # Mas filas que horas en el periodo: sobran, casi siempre por duplicados
+        detalle = (f"hay {-diferencia} filas de mas para las {len(completo)} horas "
+                   f"del periodo, probablemente repetidas")
+    else:
+        detalle = f"serie completa, {len(completo)} horas seguidas"
+
+    return Resultado("R04", "continuidad horaria", BLANDA, paso, detalle,
+                     {"diferencia": diferencia, "horas_esperadas": len(completo)})
 
 
 def r05_rangos_fisicos(df):
     """
     Ningun valor cae fuera de lo fisicamente posible.
 
-    Un valor fuera de rango no es un outlier: es un error de medición o de
+    Un valor fuera de rango no es un outlier: es un error de medicion o de
     unidad. Los rangos salen de config.VALID_RANGES y estan justificados ahi.
     """
     fuera = {}
+    no_numericos = {}
+
     for columna, (minimo, maximo) in config.VALID_RANGES.items():
         if columna not in df.columns:
             continue
-        serie = df[columna].dropna()
+
+        serie = df[columna]
+
+        # Si la columna trae texto, compararla con un numero revienta. Antes
+        # pasaba justamente eso y el pipeline se caia en vez de avisar, que no
+        # es lo mismo: un error sin explicacion no le sirve a nadie. Ahora se
+        # convierte a numero y lo que no se pueda convertir se cuenta aparte.
+        if not pd.api.types.is_numeric_dtype(serie):
+            convertida = pd.to_numeric(serie, errors="coerce")
+            n_texto = int(convertida.isna().sum() - serie.isna().sum())
+            if n_texto > 0:
+                no_numericos[columna] = n_texto
+            serie = convertida
+
+        serie = serie.dropna()
         n = int(((serie < minimo) | (serie > maximo)).sum())
         if n:
             fuera[columna] = n
 
-    paso = not fuera
-    detalle = "todos los valores dentro de rango" if paso else f"fuera de rango: {fuera}"
+    paso = not fuera and not no_numericos
+
+    partes = []
+    if fuera:
+        partes.append(f"fuera de rango: {fuera}")
+    if no_numericos:
+        partes.append(f"valores que no son numeros: {no_numericos}")
+    detalle = "; ".join(partes) if partes else "todos los valores dentro de rango"
+
     return Resultado("R05", "rangos fisicos posibles", DURA, paso, detalle,
-                     {"fuera_de_rango": fuera})
+                     {"fuera_de_rango": fuera, "no_numericos": no_numericos})
 
 
 def r06_faltantes_en_target(df):
@@ -203,14 +243,14 @@ def r09_sin_infinitos(df):
 
 
 # --------------------------------------------------------------------------
-# Ejecución
+# Ejecucion
 # --------------------------------------------------------------------------
 
 # Que reglas corren en cada momento del pipeline.
 #
-# ENTRADA: sobre la capa interim, antes de limpiar. Aquí todavia es normal que
+# ENTRADA: sobre la capa interim, antes de limpiar. Aqui todavia es normal que
 #          haya huecos, asi que R06 es blanda.
-# SALIDA:  sobre la capa processed, justo antes de entrenar. Aquí ya no se
+# SALIDA:  sobre la capa processed, justo antes de entrenar. Aqui ya no se
 #          perdona nada en el target.
 REGLAS = {
     "entrada": [r01_esquema_entrada, r02_filas_minimas, r03_sin_timestamps_repetidos,
@@ -221,13 +261,18 @@ REGLAS = {
 }
 
 
-def correr_gates(df, etapa="entrada", detener=False):
+def correr_gates(df, etapa="entrada", detener=False, min_filas=None):
     """
     Corre las reglas de la etapa indicada y las deja escritas en el log.
 
     Si detener=True y alguna regla dura falla, lanza ErrorDeCalidad. Ese es el
     "bloquea" del ciclo detecta -> bloquea/advierte -> registra.
+
+    min_filas sirve para revisar un lote de produccion, que naturalmente trae
+    muchas menos filas que el historico completo.
     """
+    from functools import partial
+
     if etapa not in REGLAS:
         raise ValueError(f"Etapa desconocida: {etapa}. Use {list(REGLAS)}")
 
@@ -237,6 +282,8 @@ def correr_gates(df, etapa="entrada", detener=False):
 
     resultados = []
     for regla in REGLAS[etapa]:
+        if regla is r02_filas_minimas and min_filas is not None:
+            regla = partial(r02_filas_minimas, minimo=min_filas)
         r = regla(df)
         resultados.append(r)
         if r.paso:
