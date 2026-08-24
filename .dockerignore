@@ -1,0 +1,36 @@
+# Lo que NO entra en la imagen.
+#
+# Sin este archivo, "docker build" manda toda la carpeta al motor de Docker,
+# incluidos los datos, el entorno virtual y los experimentos. Serian cientos de
+# megas que ni siquiera se usan, y la construccion tardaria muchisimo mas.
+
+.git/
+.github/
+.idea/
+.vscode/
+.vs/
+
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Los datos no van adentro: la API no los necesita, solo el modelo
+data/
+logs/
+
+# Los experimentos de MLflow tampoco. El modelo viaja en models/produccion,
+# que si se copia.
+mlruns/
+mlartifacts/
+
+notebooks/
+reports/
+tests/
+
+*.md
+!README.md
+Dockerfile
+.dockerignore
