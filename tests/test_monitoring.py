@@ -118,7 +118,7 @@ def test_no_reentrena_solo_por_drift():
     degradacion. Si esta prueba fallara, estariamos reentrenando modelos que
     funcionan.
     """
-    r = reentrenamiento.decidir(psi_maximo=3.265, degradacion=-0.025, filas=1270)
+    r = reentrenamiento.decidir(psi_maximo=3.265, degradacion=-0.034, filas=1270)
     assert r["decision"] == reentrenamiento.VIGILAR
     assert r["hay_drift"] is True
     assert r["hay_degradacion"] is False

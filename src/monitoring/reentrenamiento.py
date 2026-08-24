@@ -12,9 +12,9 @@ por que Data Drift no es lo mismo que Model Degradation.
 La respuesta la tenemos medida con nuestros propios datos:
 
     lote      PSI maximo    degradacion del MAE
-    batch1        1.671            +87.7%
-    batch2        6.175            +51.4%
-    batch3        3.265             -2.5%
+    batch1        1.671            +88.8%
+    batch2        6.175            +51.1%
+    batch3        3.265             -3.4%
 
 El lote 3 tiene el segundo drift mas grande de los tres y sin embargo el modelo
 anda MEJOR que en validacion. Si el disparador mirara solo el PSI, habriamos
