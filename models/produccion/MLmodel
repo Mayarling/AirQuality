@@ -1,0 +1,35 @@
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.12.10
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.5.2
+mlflow_version: 2.18.0
+model_size_bytes: 462075
+model_uuid: 6b9a5f7433304ec8bacd8bec1f2f6a44
+signature:
+  inputs: '[{"type": "double", "name": "benceno_lag24", "required": true}, {"type":
+    "double", "name": "benceno_lag25", "required": true}, {"type": "double", "name":
+    "benceno_lag48", "required": true}, {"type": "double", "name": "benceno_lag168",
+    "required": true}, {"type": "double", "name": "benceno_media3h", "required": true},
+    {"type": "double", "name": "benceno_media24h", "required": true}, {"type": "double",
+    "name": "benceno_tendencia", "required": true}, {"type": "double", "name": "PT08.S1(CO)_lag24",
+    "required": true}, {"type": "double", "name": "PT08.S2(NMHC)_lag24", "required":
+    true}, {"type": "double", "name": "PT08.S5(O3)_lag24", "required": true}, {"type":
+    "double", "name": "T_lag24", "required": true}, {"type": "double", "name": "RH_lag24",
+    "required": true}, {"type": "double", "name": "AH_lag24", "required": true}, {"type":
+    "double", "name": "hora_seno", "required": true}, {"type": "double", "name": "hora_coseno",
+    "required": true}, {"type": "double", "name": "dia_seno", "required": true}, {"type":
+    "double", "name": "dia_coseno", "required": true}, {"type": "double", "name":
+    "es_fin_de_semana", "required": true}]'
+  outputs: '[{"type": "tensor", "tensor-spec": {"dtype": "float64", "shape": [-1]}}]'
+  params: null
+utc_time_created: '2026-08-24 01:01:39.753333'

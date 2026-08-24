@@ -325,6 +325,51 @@ def registrar(ganador):
     return version.version
 
 
+def exportar(ganador, version, entradas):
+    """
+    Deja una copia del modelo de produccion como archivos sueltos.
+
+    Dentro de mlruns MLflow guarda rutas absolutas de esta maquina, y adentro
+    de Docker esas rutas no existen. Esta copia es la que se mete en la imagen
+    y funciona en cualquier lado.
+
+    Ademas se escribe un json con la ficha del modelo, para que la API pueda
+    decir que version esta sirviendo sin tener que abrir MLflow.
+    """
+    import shutil
+
+    destino = config.MODELO_EXPORTADO_DIR
+    if destino.exists():
+        shutil.rmtree(destino)
+    destino.parent.mkdir(parents=True, exist_ok=True)
+
+    modelo = mlflow.sklearn.load_model(f"runs:/{ganador['run_id']}/modelo")
+    firma = mlflow.models.get_model_info(f"runs:/{ganador['run_id']}/modelo").signature
+    mlflow.sklearn.save_model(modelo, str(destino), signature=firma)
+
+    ficha = {
+        "modelo_registrado": config.MODELO_REGISTRADO,
+        "version": str(version),
+        "algoritmo": ganador["modelo"],
+        "run_id": ganador["run_id"],
+        "target": config.TARGET,
+        "horizonte_horas": config.FORECAST_HORIZON,
+        "target_en_log": config.USAR_LOG_TARGET,
+        "variables": entradas,
+        "mae_validacion": round(ganador["mae_validation"], 4),
+        "rmse_validacion": round(ganador["rmse_validation"], 4),
+        "r2_validacion": round(ganador["r2_validation"], 4),
+        "mejora_vs_baseline_pct": round(ganador["mejora_vs_baseline"] * 100, 1),
+        "grupo": "8",
+        "integrantes": ["Mayarling Martinez", "Nicole Chavarria"],
+    }
+    config.MODELO_EXPORTADO_META.write_text(
+        json.dumps(ficha, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    log.info("Modelo exportado a %s", destino)
+    log.info("Ficha del modelo en %s", config.MODELO_EXPORTADO_META)
+
+
 def main():
     log.info("=" * 62)
     log.info("ENTRENAMIENTO")
@@ -382,6 +427,7 @@ def main():
         mlflow.set_tag("tipo", "resumen del experimento")
 
     version = registrar(ganador)
+    exportar(ganador, version, entradas)
 
     log.info("=" * 62)
     log.info("Modelo en produccion: %s v%s (%s)",
