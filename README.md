@@ -93,92 +93,74 @@ Es una serie de tiempo, así que **los cortes son por fecha y nunca al azar**. P
 
 Cada caja del diagrama corresponde a un archivo real de este repositorio. El nombre del archivo va escrito dentro de la caja.
 
-```mermaid
-flowchart TD
-    FUENTE["Fuente externa<br/>archive.ics.uci.edu<br/>air+quality.zip"]
+![Arquitectura del proyecto](reports/figuras/12_arquitectura.png)
 
-    subgraph S1 ["1 · Ingesta"]
-        ING["src/ingestion/ingest.py<br/><i>descarga, md5, sep=; decimal=,</i>"]
-        RAW[("data/raw/<br/>AirQualityUCI.csv")]
-    end
-
-    subgraph S2 ["2 · Calidad y limpieza"]
-        GATE["src/validation/quality_gates.py<br/><i>9 reglas, duras y blandas</i>"]
-        DIAG["src/validation/diagnose.py<br/><i>reports/diagnostico_calidad.md</i>"]
-        CLEAN["src/cleaning/clean.py<br/><i>-200 a nulo, huecos de hasta 3 h</i>"]
-        INT[("data/interim/<br/>air_quality_interim.parquet")]
-        PROC[("data/processed/<br/>air_quality_limpio.parquet")]
-    end
-
-    subgraph S3 ["3 · Análisis y variables"]
-        EDA["notebooks/01_eda.ipynb<br/>src/eda/plots.py"]
-        FEAT["src/features/build_features.py<br/><i>corta si un rezago menor al horizonte</i>"]
-        FE[("data/processed/<br/>features.parquet")]
-    end
-
-    subgraph S4 ["4 · Entrenamiento"]
-        TRAIN["src/training/train.py<br/><i>4 modelos, corte por fecha</i>"]
-        EVAL["src/training/evaluate.py<br/>src/training/models.py"]
-    end
-
-    subgraph S5 ["5 · MLflow"]
-        EXP["Experiment<br/><i>air-quality-benceno-24h</i>"]
-        REG["Model Registry<br/><i>grupo8-benceno-24h</i>"]
-        ALIAS["alias candidato y produccion"]
-        EXPORT[("models/produccion/<br/>models/produccion_info.json")]
-    end
-
-    subgraph S6 ["6 · Servicio"]
-        API["src/api/main.py<br/><i>6 endpoints + middleware</i>"]
-        MOD["src/api/modelo.py<br/><i>4 formas de cargar el modelo</i>"]
-        DOCK["Dockerfile<br/><i>python:3.12-slim, usuario sin root</i>"]
-    end
-
-    subgraph S7 ["7 · Monitoreo"]
-        DRIFT["src/monitoring/drift.py<br/><i>PSI, KS, Wasserstein, JS</i>"]
-        MM["src/monitoring/model_metrics.py<br/><i>MAE y RMSE en el tiempo</i>"]
-        SIM["src/monitoring/contaminar.py<br/><i>6 daños a propósito</i>"]
-        DEC["src/monitoring/reentrenamiento.py<br/><i>drift Y degradación</i>"]
-        REP[("reports/monitoreo.md<br/>reports/monitoreo.json")]
-    end
-
-    ALERTA["Alerta<br/>REENTRENAR · VIGILAR<br/>REVISAR_DATOS · TODO_BIEN"]
-
-    FUENTE --> ING --> RAW --> GATE
-    GATE -->|pasa| CLEAN
-    GATE -.->|falla una regla dura| ALERTA
-    RAW --> DIAG
-    CLEAN --> INT --> PROC --> EDA --> FEAT --> FE --> TRAIN
-    TRAIN --> EVAL
-    TRAIN --> EXP --> REG --> ALIAS --> EXPORT
-    EXPORT --> MOD --> API --> DOCK
-    FE --> DRIFT --> DEC
-    FE --> MM --> DEC
-    PROC --> SIM --> GATE
-    DEC --> REP
-    DEC --> ALERTA
-    API -->|GET /metrics| MM
-    ALERTA -.->|si dice REENTRENAR| TRAIN
-
-    classDef datos fill:#e8f1fb,stroke:#2a78d6,color:#12263a
-    classDef aviso fill:#fdeee7,stroke:#eb6834,color:#12263a
-    class RAW,INT,PROC,FE,EXPORT,REP datos
-    class ALERTA aviso
-```
-
-Las tres flechas que vale la pena mirar dos veces:
-
-- **`GATE` → `ALERTA` con línea punteada.** Si falla una regla dura, el pipeline se detiene ahí y no sigue. No es un aviso que se pueda ignorar.
-- **`SIM` → `GATE`.** La simulación de daños no usa reglas propias: le pasa el lote roto a **las mismas reglas** que usa el pipeline de verdad. Si usara otras, no probaría nada.
-- **`ALERTA` → `TRAIN` con línea punteada.** Es el ciclo cerrado: cuando la decisión dice REENTRENAR, se vuelve al entrenamiento. Punteada porque el disparo lo autorizamos nosotras, no es automático (explicado en la sección 11).
-
-El mismo diagrama como imagen suelta, para meterlo en la presentación:
+La imagen se genera con:
 
 ```bash
 python scripts/diagrama.py
 ```
 
-Queda en `reports/figuras/12_arquitectura.png`.
+Las tres flechas que vale la pena mirar dos veces:
+
+- **Data Quality Gates → Pipeline detenido**, en naranja punteado. Si falla una regla dura, el pipeline se detiene ahí y no sigue. No es un aviso que se pueda ignorar.
+- **Simulación de daños → Data Quality Gates.** La simulación no usa reglas propias: le pasa el lote roto a **las mismas** reglas que usa el pipeline de verdad. Si usara otras, no probaría nada.
+- **Decisión → Entrenamiento**, también punteada. Es el ciclo cerrado: cuando la decisión dice REENTRENAR, se vuelve al entrenamiento. Va punteada porque el disparo lo autorizamos nosotras, no es automático (explicado en la sección 11).
+
+<details>
+<summary>El mismo diagrama escrito en Mermaid, por si se quiere editar</summary>
+
+```mermaid
+flowchart TD
+    FUENTE["Fuente externa<br/>archive.ics.uci.edu"]
+    ING["Ingesta<br/>src/ingestion/<br/>ingest.py"]
+    RAW[("Datos crudos<br/>data/raw/<br/>AirQualityUCI.csv")]
+    GATE["Data Quality Gates<br/>src/validation/<br/>quality_gates.py"]
+    SIM["Simulacion de danos<br/>src/monitoring/<br/>contaminar.py"]
+    STOP["Pipeline detenido<br/>ErrorDeCalidad"]
+    CLEAN["Limpieza<br/>src/cleaning/<br/>clean.py"]
+    PROC[("Datos limpios<br/>data/processed/<br/>air_quality_limpio")]
+    EDA["Analisis exploratorio<br/>notebooks/<br/>01_eda.ipynb"]
+    FEAT["Variables sin leakage<br/>src/features/<br/>build_features.py"]
+    FE[("Variables<br/>data/processed/<br/>features.parquet")]
+    TRAIN["Entrenamiento<br/>src/training/<br/>train.py"]
+    ML["MLflow<br/>Experiment<br/>+ Model Registry"]
+    EXPORT[("Modelo en produccion<br/>models/<br/>produccion/")]
+    DOCK["Contenedor<br/>Dockerfile"]
+    API["API<br/>src/api/<br/>main.py"]
+    MON["Monitoreo de datos<br/>y de modelo<br/>run_monitoring.py"]
+    DEC["Decision<br/>src/monitoring/<br/>reentrenamiento.py"]
+    REP[("Reporte<br/>reports/<br/>monitoreo.md")]
+
+    FUENTE --> ING
+    ING --> RAW
+    RAW --> GATE
+    GATE -->|pasa| CLEAN
+    CLEAN --> PROC
+    PROC --> EDA
+    EDA --> FEAT
+    FEAT --> FE
+    FE --> TRAIN
+    TRAIN --> ML
+    ML --> EXPORT
+    EXPORT --> DOCK
+    DOCK --> API
+    FE --> MON
+    API -->|GET /metrics| MON
+    MON --> DEC
+    DEC --> REP
+    PROC --> SIM
+    SIM -.->|las mismas reglas| GATE
+    GATE -.->|falla una regla dura| STOP
+    DEC -.->|si dice REENTRENAR| TRAIN
+
+    classDef datos fill:#e8f1fb,stroke:#2a78d6,color:#12263a
+    classDef aviso fill:#fdeee7,stroke:#eb6834,color:#12263a
+    class RAW,PROC,FE,EXPORT,REP datos
+    class SIM,STOP,DEC aviso
+```
+
+</details>
 
 ---
 
