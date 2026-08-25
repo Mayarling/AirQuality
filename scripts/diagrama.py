@@ -33,6 +33,9 @@ from src import config
 from src.eda.plots import AQUA, AZUL, GRIS, NARANJA, TINTA, TINTA_SUAVE
 
 SALIDA = config.REPORTS_DIR / "figuras" / "12_arquitectura.png"
+# La misma imagen sin el titulo de arriba, para la presentacion: ahi la
+# lamina ya lleva su propio titulo y repetirlo se veia mal.
+SALIDA_LIMPIA = config.REPORTS_DIR / "figuras" / "12_arquitectura_lamina.png"
 
 # Ancho y alto de una caja, en las unidades del lienzo (0 a 100)
 ANCHO = 21.0
@@ -115,7 +118,7 @@ def banda(ax, y, titulo):
             fontweight="medium", color=AZUL)
 
 
-def main():
+def dibujar(con_titulo=True):
     fig, ax = plt.subplots(figsize=(17.5, 11.5))
     ax.set_xlim(-20, 140)
     ax.set_ylim(-14, 100)
@@ -156,8 +159,11 @@ def main():
 
     flecha(ax, n_sim, n_gates, "las mismas reglas", punteada=True)
     flecha(ax, n_gates, n_stop, punteada=True)
-    ax.text(lado - ANCHO / 2 - 2, fy[1] + 3, "si falla\nuna regla dura",
-            ha="right", va="center", fontsize=7, color=NARANJA)
+    # La etiqueta va debajo de la caja de destino: puesta sobre la flecha, el
+    # trazo punteado le pasaba por encima de las letras.
+    ax.text(cx[3] - 2, fy[0] - ALTO / 2 - 3.5,
+            "si falla una regla dura",
+            ha="right", va="center", fontsize=7.5, color=NARANJA)
     ax.text(lado, fy[0] - ALTO / 2 - 2.2,
             "toma un lote de data/processed\ny lo rompe solo en memoria",
             ha="center", va="top", fontsize=6.6, color=TINTA_SUAVE)
@@ -221,8 +227,9 @@ def main():
         arrowstyle="-|>", mutation_scale=13, linewidth=1.2, color=TINTA_SUAVE,
         connectionstyle="arc3,rad=-0.22", zorder=1, shrinkA=0, shrinkB=0,
     ))
-    ax.text(cx[1] - 6, fy[3] + ALTO / 2 + 4, "los lotes de produccion",
-            ha="right", va="bottom", fontsize=7, color=TINTA_SUAVE)
+    ax.text(cx[0] - ANCHO / 2 + 1, fy[3] + ALTO / 2 + 2.5,
+            "los lotes de produccion",
+            ha="left", va="bottom", fontsize=7.5, color=TINTA_SUAVE)
 
     # --- El reporte y el ciclo de reentrenamiento -------------------------
     n_rep = caja(ax, cx[0], abajo, "Reporte",
@@ -237,16 +244,17 @@ def main():
         linestyle=(0, (4, 3)),
         connectionstyle="arc3,rad=0.3", zorder=1, shrinkA=0, shrinkB=0,
     ))
-    ax.text(cx[0] + ANCHO / 2 + 1, fy[3] + 15.5, "si dice REENTRENAR",
-            ha="left", va="center", fontsize=7, color=NARANJA)
+    ax.text(cx[1] - ANCHO / 2 + 1.5, fy[2] - ALTO / 2 - 5.5, "si dice REENTRENAR",
+            ha="left", va="center", fontsize=7.5, color=NARANJA)
 
     # --- Titulo y leyenda -------------------------------------------------
-    ax.text(-20, 98, "Arquitectura del proyecto",
-            ha="left", va="center", fontsize=16, color=TINTA)
-    ax.text(-20, 94.2,
-            "Grupo 8  ·  pronostico de benceno a 24 horas  ·  "
-            "cada caja lleva debajo el archivo del repositorio que la implementa",
-            ha="left", va="center", fontsize=8.5, color=TINTA_SUAVE)
+    if con_titulo:
+        ax.text(-20, 98.5, "Arquitectura del proyecto",
+                ha="left", va="center", fontsize=16, color=TINTA)
+        ax.text(-20, 95.2,
+                "Grupo 8  ·  pronostico de benceno a 24 horas  ·  "
+                "cada caja lleva debajo el archivo del repositorio que la implementa",
+                ha="left", va="center", fontsize=8.5, color=TINTA_SUAVE)
 
     etiquetas = [("archivos en disco", "datos"), ("codigo", "codigo"),
                  ("modelo", "modelo"), ("cortes y alertas", "aviso"),
@@ -261,11 +269,16 @@ def main():
         ax.text(x + 4.6, -10.9, texto, ha="left", va="center", fontsize=8,
                 color=TINTA_SUAVE)
 
-    SALIDA.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(SALIDA, dpi=160, bbox_inches="tight", facecolor="white")
-    plt.close(fig)
+    return fig
 
-    print(f"Diagrama guardado en {SALIDA}")
+
+def main():
+    for destino, con_titulo in [(SALIDA, True), (SALIDA_LIMPIA, False)]:
+        fig = dibujar(con_titulo)
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(destino, dpi=200, bbox_inches="tight", facecolor="white")
+        plt.close(fig)
+        print(f"Diagrama guardado en {destino}")
     return 0
 
 

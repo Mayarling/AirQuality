@@ -101,6 +101,8 @@ La imagen se genera con:
 python scripts/diagrama.py
 ```
 
+Deja dos archivos: `12_arquitectura.png`, que es el de arriba, y `12_arquitectura_lamina.png`, el mismo sin el título, que es el que va en la presentación porque allí la lámina ya lleva el suyo.
+
 Las tres flechas que vale la pena mirar dos veces:
 
 - **Data Quality Gates → Pipeline detenido**, en naranja punteado. Si falla una regla dura, el pipeline se detiene ahí y no sigue. No es un aviso que se pueda ignorar.
@@ -179,11 +181,17 @@ AirQuality/
 │   └── produccion_info.json     ficha del modelo en producción
 ├── notebooks/
 │   └── 01_eda.ipynb             análisis exploratorio con las decisiones
+├── presentacion/
+│   ├── grupo8_mlops.pptx        la presentación para proyectar
+│   ├── presentacion.md          la misma, en texto y con las notas
+│   ├── guion_demo.md            el guion de la demostración en vivo
+│   └── armar_presentacion.js    genera el .pptx
 ├── reports/
 │   ├── diagnostico_calidad.md   diagnóstico de los datos en 9 puntos
+│   ├── informe_tecnico.md       el informe técnico del proyecto
 │   ├── monitoreo.md             reporte de drift y desempeño
 │   ├── monitoreo.json           lo mismo en formato para máquinas
-│   └── figuras/                 las 11 gráficas
+│   └── figuras/                 las 12 gráficas y el diagrama
 ├── scripts/
 │   ├── probar_api.py            prueba la API con datos reales
 │   └── diagrama.py              genera la imagen del diagrama
@@ -696,6 +704,20 @@ Para ser honestas sobre los límites de este trabajo:
 - **El umbral del 25% de degradación lo escogimos nosotras.** Es un punto de partida razonable, pero habría que ajustarlo viendo cuánto le cuesta al negocio un error de pronóstico.
 - **No hay reentrenamiento automático**, por la razón explicada arriba.
 - **El monitoreo de modelo llega tarde por diseño.** Con horizonte de 24 horas el error solo se puede medir al día siguiente.
+
+---
+
+## Documentación
+
+| Documento | Qué es |
+|---|---|
+| `README.md` | este archivo |
+| `reports/informe_tecnico.md` | el informe técnico: decisiones, resultados y límites |
+| `reports/diagnostico_calidad.md` | el diagnóstico de los datos en 9 puntos |
+| `reports/monitoreo.md` | el reporte de drift y desempeño |
+| `presentacion/grupo8_mlops.pptx` | la presentación de la defensa |
+| `presentacion/guion_demo.md` | el guion de la demostración en vivo |
+| `notebooks/01_eda.ipynb` | el análisis exploratorio, con las decisiones |
 
 ---
 

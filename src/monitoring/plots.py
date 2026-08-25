@@ -94,8 +94,12 @@ def drift_contra_desempeno(resumenes, desempeno, nombre="09_drift_vs_desempeno")
     barras = ejes[0].bar(lotes, psis, color=AZUL, width=0.55)
     ejes[0].axhline(config.PSI_ALERT, color=NARANJA, linewidth=1.2,
                     linestyle=(0, (4, 3)))
-    ejes[0].text(len(lotes) - 0.5, config.PSI_ALERT, f" alerta {config.PSI_ALERT}",
-                 fontsize=8, color=NARANJA, va="bottom", ha="right")
+    # La etiqueta va sobre un recuadro blanco porque la linea de alerta queda
+    # muy abajo y el texto caia justo encima de una barra.
+    ejes[0].text(len(lotes) - 0.5, config.PSI_ALERT, f"alerta {config.PSI_ALERT}",
+                 fontsize=8, color=NARANJA, va="bottom", ha="right",
+                 bbox=dict(boxstyle="round,pad=0.25", facecolor="white",
+                           edgecolor="none"))
     ejes[0].set_ylabel("PSI mas alto del lote")
     ejes[0].set_title("Cuanto cambiaron los datos")
     ejes[0].grid(axis="y")
