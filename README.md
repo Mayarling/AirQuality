@@ -101,7 +101,7 @@ La imagen se genera con:
 python scripts/diagrama.py
 ```
 
-Deja dos archivos: `12_arquitectura.png`, que es el de arriba, y `12_arquitectura_lamina.png`, el mismo sin el título, que es el que va en la presentación porque allí la lámina ya lleva el suyo.
+Deja dos archivos: `12_arquitectura.png`, que es el de arriba, y `12_arquitectura_lamina.png`, el mismo sin el título, pensado para pegarlo en una diapositiva que ya lleve el suyo.
 
 Las tres flechas que vale la pena mirar dos veces:
 
@@ -181,11 +181,6 @@ AirQuality/
 │   └── produccion_info.json     ficha del modelo en producción
 ├── notebooks/
 │   └── 01_eda.ipynb             análisis exploratorio con las decisiones
-├── presentacion/
-│   ├── grupo8_mlops.pptx        la presentación para proyectar
-│   ├── presentacion.md          la misma, en texto y con las notas
-│   ├── guion_demo.md            el guion de la demostración en vivo
-│   └── armar_presentacion.js    genera el .pptx
 ├── reports/
 │   ├── diagnostico_calidad.md   diagnóstico de los datos en 9 puntos
 │   ├── informe_tecnico.md       el informe técnico del proyecto
@@ -715,8 +710,6 @@ Para ser honestas sobre los límites de este trabajo:
 | `reports/informe_tecnico.md` | el informe técnico: decisiones, resultados y límites |
 | `reports/diagnostico_calidad.md` | el diagnóstico de los datos en 9 puntos |
 | `reports/monitoreo.md` | el reporte de drift y desempeño |
-| `presentacion/grupo8_mlops.pptx` | la presentación de la defensa |
-| `presentacion/guion_demo.md` | el guion de la demostración en vivo |
 | `notebooks/01_eda.ipynb` | el análisis exploratorio, con las decisiones |
 
 ---
