@@ -28,6 +28,14 @@ Construimos un sistema completo que pronostica la concentración de benceno en e
 
 **Tres.** Fabricar problemas a propósito encontró un error real en nuestro propio código. La regla de validación que revisa rangos físicos se caía cuando le llegaba texto donde esperaba un número. Sin la simulación, ese error habría aparecido en producción.
 
+### El sistema de un vistazo
+
+![Arquitectura del proyecto](figuras/12_arquitectura.png)
+
+Cada caja del diagrama lleva debajo el archivo del repositorio que la implementa. Las dos flechas naranjas punteadas son las que más vale mirar: la de arriba a la derecha detiene el pipeline cuando falla una regla dura, y la de abajo a la izquierda lo devuelve al entrenamiento cuando la decisión dice REENTRENAR.
+
+La imagen se genera con `python scripts/diagrama.py`.
+
 ---
 
 ## 2. El problema
@@ -71,6 +79,8 @@ Nos pusimos dos criterios de negocio antes de entrenar nada: ganarle al menos un
 **Hay dos instrumentos distintos, no uno.** Por un lado el arreglo de cinco sensores de estado sólido, por otro un analizador certificado de referencia. Fallan en momentos diferentes, y por eso los tratamos por separado en el diagnóstico.
 
 **La página de la fuente no coincide con el archivo.** UCI dice que el periodo va de marzo de 2004 a febrero de 2005; el archivo llega hasta abril de 2005. Son casi 13 meses, no 12. Nos guiamos por el archivo, que es el dato duro.
+
+![El benceno a lo largo de los 13 meses](figuras/01_serie_completa.png)
 
 ### Los apagones
 
@@ -117,7 +127,7 @@ Es una serie de tiempo. **Los cortes son por fecha y nunca al azar**: partir al 
 | `batch1` | 2004-10-01 00:00 | 2004-11-30 23:00 | 1 464 |
 | `batch2` | 2004-12-01 00:00 | 2005-01-31 23:00 | 1 058 |
 | `batch3` | 2005-02-01 00:00 | 2005-04-03 14:00 | 1 270 |
-| | | | **8 011** |
+| **Total** | | | **8 011** |
 
 `train` + `validation` = 4 219 filas es lo que llamamos **REFERENCE**: todo lo que el modelo llegó a conocer. Los tres lotes hacen de producción, datos que llegan después en el tiempo.
 
@@ -344,6 +354,8 @@ En los tres lotes la variable que más cambia es la misma: la temperatura. Es el
 
 ## 9. El hallazgo principal: drift no es degradación
 
+![Drift contra desempeño](figuras/09_drift_vs_desempeno.png)
+
 **El lote 3 tiene un PSI de 3.265 —trece veces el umbral de alerta— y el modelo acierta un 3.4% mejor que en validación.**
 
 Si el disparador mirara solo el drift, habríamos reentrenado un modelo que estaba funcionando bien, gastando tiempo y arriesgando empeorarlo.
@@ -529,3 +541,61 @@ Los detalles de cada paso están en el `README.md`.
 | Límite de degradación | 25% del MAE |
 | Pruebas automáticas | 56 |
 | Imagen de Docker | 865 MB |
+
+---
+
+## 17. Anexo: dónde se resuelve cada punto del diagnóstico de calidad
+
+La etapa 3 del enunciado pide investigar diecisiete cosas. Esta tabla dice
+dónde se resuelve cada una y qué encontramos.
+
+| # | Qué pide | Dónde está | Qué encontramos y qué decidimos |
+|---|---|---|---|
+| 1 | Valores faltantes | `diagnose.py` punto 1 · regla R06 | El benceno tiene 366 faltantes, un 3.91%. Otras columnas mucho más: `NMHC(GT)` llega al 90.23%. |
+| 2 | Faltantes codificados con símbolos | `ingest.py` · `diagnose.py` punto 1 | **Este fue uno de los hallazgos que más cambió el trabajo.** Los faltantes no vienen vacíos: vienen escritos como `-200`. Sin convertirlos primero, los promedios salen negativos. Se convierten en la ingesta, antes de calcular nada. |
+| 3 | Duplicados | `diagnose.py` punto 2 · reglas R03 y R07 | Se miran dos cosas distintas: filas repetidas enteras y marcas de tiempo repetidas. R07 corta si pasan del 1%; R03 corta si hay cualquier hora repetida, porque en una serie horaria eso significa que algo se procesó dos veces. |
+| 4 | Registros inconsistentes | `diagnose.py` punto 3 · regla R04 | Se comprueba que la serie horaria sea continua, comparando las horas que hay contra las que debería haber entre la primera y la última. |
+| 5 | Tipos incorrectos | Regla R01 · simulado en `contaminar.py` | R01 comprueba que las columnas esperadas sean numéricas de verdad. Lo probamos metiendo el texto `"quince grados"` en la temperatura, y ahí descubrimos que R05 se caía con texto. Está corregido. |
+| 6 | Categorías inconsistentes | Regla R01 · simulado en `contaminar.py` | **Acá hay que ser honestas: este dataset no tiene ninguna columna categórica**, todo es numérico, así que no hay categorías que puedan ser inconsistentes. El equivalente que sí probamos es que aparezca una columna que no estaba, y R01 la detecta como "columnas de más". |
+| 7 | Fechas inválidas | `ingest.py` · reglas R03 y R04 | `Date` y `Time` vienen en dos columnas separadas y se juntan en una sola. Una fila con fecha que no se puede leer no pasa de la ingesta. Después R03 y R04 vigilan que no haya horas repetidas ni saltos. |
+| 8 | Datos imposibles | `diagnose.py` punto 6 · regla R05 | Los rangos físicos posibles están en `config.VALID_RANGES` y cada uno tiene su justificación escrita ahí. Un valor fuera de ese rango no es un dato raro: es un error. Lo probamos con una humedad relativa de 999% y un benceno de −45. |
+| 9 | Valores extremos | `diagnose.py` punto 7 | Se cuentan con la regla del rango intercuartil. **Y no se borran.** Un pico de benceno es justamente lo que queremos poder pronosticar; borrarlo sería quitarle al modelo lo que más importa. Lo que sí hicimos fue usar el logaritmo, que reduce el peso de la cola sin tirar ningún dato. |
+| 10 | Cardinalidad | `diagnose.py` punto 5 | Se cuentan los valores distintos de cada columna. Es información del diagnóstico y no hay una regla de calidad dedicada a esto. Una columna con un solo valor no aporta nada al modelo y suele ser señal de que el sensor se quedó pegado. |
+| 11 | Skewness | `diagnose.py` punto 5 | El benceno tiene sesgo **1.361**: una cola larga de picos. **De acá salió una decisión concreta**: entrenar con logaritmo, que baja el sesgo a −0.234, y devolver todas las métricas en µg/m³. |
+| 12 | Errores de unidad | Regla R05 | No hay una regla aparte porque un valor en otra unidad cae fuera del rango físico y R05 lo agarra igual. Está explicado en el propio archivo: una temperatura en Fahrenheit o una concentración en otra escala se sale del rango y se detecta. |
+| 13 | Leakage | `diagnose.py` punto 8 · `build_features.py` · 19 pruebas | El diagnóstico encontró que `PT08.S2(NMHC)` correlaciona **0.982** con el benceno. Usarlo sin rezagar daría un modelo con métricas espectaculares e inútil. La protección no es un comentario: `build_features.py` levanta `ErrorDeLeakage` y detiene el proceso si alguien pide un rezago menor que el horizonte. |
+| 14 | Imbalance | `diagnose.py` punto 5 · figura 02 | **Otra que hay que decir con claridad: esto es un problema de regresión, no de clasificación, así que no hay clases que puedan estar desbalanceadas.** El equivalente es la forma de la distribución del objetivo, que sí miramos: está muy cargada a valores bajos con pocos picos altos, y por eso usamos logaritmo. |
+| 15 | Gaps temporales | `diagnose.py` puntos 3 y 4 · regla R04 | **El hallazgo más importante del diagnóstico.** Los faltantes no están sueltos: son **16 apagones** del equipo, el más largo de **76 horas**. Eso decidió toda la limpieza: se interpolan solo los huecos que caben enteros en 3 horas y los largos quedan como nulos. |
+| 16 | Correlación excesiva | `diagnose.py` punto 8 | Se calcula la correlación de cada variable con el objetivo y se marcan las sospechosas. Es el punto que destapó lo de `PT08.S2`. |
+| 17 | Anomalías estadísticas | `diagnose.py` punto 7 · todo `src/monitoring/` | En los datos históricos, con la regla del rango intercuartil. Y en producción, con las cuatro medidas de drift: PSI, Kolmogorov-Smirnov, Wasserstein y Jensen-Shannon, que detectan cuando un lote nuevo se comporta distinto de lo que el modelo conoce. |
+
+### Sobre no escribir `df.dropna(inplace=True)`
+
+El enunciado avisa que no basta con borrar y seguir. Nuestras tres decisiones de
+limpieza y por qué:
+
+**No se descarta ninguna fila en la limpieza.** Borrar filas correría las horas
+y los rezagos dejarían de apuntar a donde deben. En una serie de tiempo, borrar
+una fila no es quitar un dato: es romper el orden de todos los demás.
+
+**Solo se descarta una columna, `NMHC(GT)`, y con un número que lo justifica:**
+el 90.23% de sus valores son faltantes. Rellenar eso sería fabricar nueve de
+cada diez valores.
+
+**La interpolación tiene un límite pensado.** Se rellenan únicamente los huecos
+que caben enteros en 3 horas. Y no usamos `interpolate(limit=3)` de pandas
+aunque suene a lo mismo: eso rellena las primeras 3 horas de cualquier hueco,
+por largo que sea, y en un apagón de 76 horas dejaría tres horas inventadas
+seguidas de un salto brusco. Nuestra función mide primero el largo completo de
+cada racha y solo rellena las cortas.
+
+**Las filas que sí se pierden se pierden más adelante y por otra razón.** Al
+construir las variables se caen 1 178 filas porque algún rezago cae dentro de un
+apagón. No es una decisión de limpieza: es que para esas horas no existe la
+información que el modelo necesitaría. Preferimos perderlas antes que rellenar
+con un número inventado, y está contado en la sección 4 con el desglose
+completo: 144 al principio, 24 al final y 1 178 en el medio.
+
+**Y queda constancia de lo que se rellenó.** La columna `imputado` marca con un
+1 cada valor interpolado, así siempre se puede distinguir un dato medido de uno
+calculado.

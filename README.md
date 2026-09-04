@@ -17,7 +17,7 @@ El benceno es un compuesto que sale principalmente del tráfico. Está clasifica
 Saberlo con un día de antelación sirve para algo concreto:
 
 - Un municipio puede avisar a la población y restringir el tráfico antes de que ocurra el pico, no después.
-- Un hospital o una escuela puede recomendarle a la gente sensible —niños con asma, personas mayores— que se quede adentro ese día.
+- Un hospital o una escuela puede recomendarle a la gente sensible, niños con asma, personas mayores que se quede adentro ese día.
 - Quien opera la red de sensores puede saber si mañana va a hacer falta atención especial.
 
 **Por qué 24 horas y no una:** con una hora de aviso no se puede organizar nada. Un día alcanza para comunicar y actuar. También es lo que hace el problema difícil de verdad, y por eso obliga a ser estrictas con el leakage: a la hora de hoy no podemos usar ningún dato de las próximas 23 horas, porque en la vida real todavía no habrían ocurrido.
@@ -310,23 +310,23 @@ Después de la ingesta corren las **9 reglas de calidad**:
 python -m src.validation.diagnose
 ```
 
-| Código | Regla | Tipo |
-|---|---|---|
-| R01 | el esquema de columnas es el esperado | dura |
-| R02 | llega la cantidad mínima de filas | dura |
-| R03 | no hay marcas de tiempo repetidas | dura |
-| R04 | la serie horaria es continua | blanda |
-| R05 | los valores están dentro de rangos físicos posibles | dura |
-| R06 | el target no pasa del 10% de huecos | blanda |
-| R07 | no hay más de 1% de filas duplicadas | dura |
-| R08 | ninguna columna es constante | blanda |
-| R09 | los tipos de dato son numéricos donde deben serlo | dura |
+| Código | Regla                                               | Tipo   |
+|---|-----------------------------------------------------|--------|
+| R01 | el esquema de columnas es el esperado               | dura   |
+| R02 | llega la cantidad mínima de filas                   | dura   |
+| R03 | no hay marcas de tiempo repetidas                   | dura   |
+| R04 | la serie horaria es continua                        | blanda |
+| R05 | los valores están dentro de rangos físicos posibles | dura   |
+| R06 | el target no pasa del 10% de huecos                 | blanda |
+| R07 | no hay más de 1% de filas duplicadas                | dura   |
+| R08 | el target no tiene ningún hueco                     | dura   |
+| R09 | no hay valores infinitos                            | dura   |
 
 **Dura** significa que el pipeline se detiene. **Blanda** significa que queda un aviso en el log y el proceso sigue.
 
 La diferencia importa: que falten unas horas sueltas (R04) es normal en un equipo real y no justifica botar toda la corrida. Que aparezca una columna que no existía (R01) sí, porque a partir de ahí nada de lo que se calcule significa lo mismo.
 
-Las reglas corren **dos veces**: a la entrada, sobre los datos crudos, y a la salida, sobre los datos ya limpios. La segunda pasada es la que comprueba que la limpieza no rompió nada.
+Las reglas corren en **dos momentos**: siete antes de limpiar, sobre los datos crudos, y cinco después, sobre los ya limpios. Tres de ellas (R01, R02 y R05) corren las dos veces. La segunda pasada es la que comprueba que la limpieza no rompió nada.
 
 ### Limpieza
 
@@ -570,7 +570,7 @@ ENTONCES  reentrenar
 | no | sí | **REVISAR_DATOS** | algo pasa que el PSI no ve |
 | no | no | **TODO_BIEN** | seguir midiendo |
 
-**El disparo no es automático.** Cuando la decisión dice REENTRENAR queda registrado en el log y en el reporte, pero el entrenamiento lo lanzamos nosotras. Con un solo modelo y un histórico chico, un reentrenamiento automático puede reemplazar un modelo bueno por uno peor sin que nadie se entere. Preferimos que quede un ser humano en el medio.
+**El disparo no es automático.** Cuando la decisión dice REENTRENAR queda registrado en el log y en el reporte, pero el entrenamiento lo lanzamos nosotras. Con un solo modelo y un histórico pequeño, un reentrenamiento automático puede reemplazar un modelo bueno por uno peor sin que nadie se entere. Preferimos que quede un ser humano en el medio.
 
 ### La simulación de problemas de calidad
 

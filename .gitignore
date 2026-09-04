@@ -33,5 +33,6 @@ env/
 .DS_Store
 Thumbs.db
 
-# La presentacion se entrega por Q10, no va en el repositorio
-presentacion/
+# De la presentacion solo se sube el PowerPoint
+presentacion/*
+!presentacion/grupo8_mlops.pptx

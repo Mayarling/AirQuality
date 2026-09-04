@@ -138,7 +138,7 @@ resultado altisimo y falso.
 | R01 | esquema de columnas | dura | True | 13 columnas correctas |
 | R02 | cantidad minima de filas | dura | True | 9357 filas (minimo 8000) |
 | R03 | timestamps sin repetir | dura | True | 0 repetidos |
-| R04 | continuidad horaria | blanda | True | 0 horas ausentes de 9357 esperadas |
+| R04 | continuidad horaria | blanda | True | serie completa, 9357 horas seguidas |
 | R05 | rangos fisicos posibles | dura | True | todos los valores dentro de rango |
 | R06 | faltantes en el target | blanda | True | 3.91% de huecos (limite 10%) |
 | R07 | filas duplicadas | dura | True | 0.000% duplicadas (limite 1%) |
