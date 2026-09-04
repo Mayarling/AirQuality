@@ -1,0 +1,24 @@
+# Solo lo que la API necesita para funcionar.
+#
+# Este archivo es el que instala el contenedor de Docker. Es distinto de
+# requirements.txt a proposito: ahi estan tambien MLflow, matplotlib,
+# statsmodels y pytest, que hacen falta para entrenar y analizar pero no para
+# responder una peticion.
+#
+# Dejar MLflow fuera baja el tamano de la imagen a menos de la mitad. El modelo
+# se carga leyendo models/produccion/model.pkl con cloudpickle, que es lo que
+# hace src/api/modelo.py en su tercer camino de carga.
+#
+# Las versiones son las mismas de requirements.txt. Tienen que serlo: el
+# archivo del modelo se guarda con la version de scikit-learn que lo entreno, y
+# abrirlo con otra puede fallar.
+
+fastapi==0.115.5
+uvicorn==0.32.1
+pydantic==2.10.3
+pandas==2.2.3
+numpy==2.1.3
+scikit-learn==1.5.2
+scipy==1.14.1
+cloudpickle==3.1.0
+pyarrow==18.1.0

@@ -1,0 +1,38 @@
+{
+  "modelo_registrado": "grupo8-benceno-24h",
+  "version": "2",
+  "algoritmo": "gradient_boosting",
+  "run_id": "933c3b8128644cd4a5e71b52e7e6a60e",
+  "target": "C6H6(GT)",
+  "horizonte_horas": 24,
+  "target_en_log": true,
+  "variables": [
+    "benceno_lag24",
+    "benceno_lag25",
+    "benceno_lag48",
+    "benceno_lag168",
+    "benceno_media3h",
+    "benceno_media24h",
+    "benceno_tendencia",
+    "PT08.S1(CO)_lag24",
+    "PT08.S2(NMHC)_lag24",
+    "PT08.S5(O3)_lag24",
+    "T_lag24",
+    "RH_lag24",
+    "AH_lag24",
+    "hora_seno",
+    "hora_coseno",
+    "dia_seno",
+    "dia_coseno",
+    "es_fin_de_semana"
+  ],
+  "mae_validacion": 2.9047,
+  "rmse_validacion": 4.4298,
+  "r2_validacion": 0.6476,
+  "mejora_vs_baseline_pct": 27.8,
+  "grupo": "8",
+  "integrantes": [
+    "Mayarling Martinez",
+    "Nicole Chavarria"
+  ]
+}
